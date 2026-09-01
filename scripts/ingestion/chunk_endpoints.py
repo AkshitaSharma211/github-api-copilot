@@ -70,16 +70,3 @@ print(all_chunks[0]['text'])
 
 with open('data/processed/chunks.json', 'w') as f:
     json.dump(all_chunks, f, indent=2)
-
-import json
-from sentence_transformers import SentenceTransformer
-import numpy as np
-
-with open('data/processed/chunks.json', 'r') as f:
-    chunks = json.load(f)
-
-model = SentenceTransformer('bge-small-en-v1.5') 
-chunk_embeddings = model.encode([chunk['text'] for chunk in chunks], show_progress_bar=True)
-
-print(chunk_embeddings.shape)
-np.save('data/processed/chunk_embeddings.npy', chunk_embeddings)

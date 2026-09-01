@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>API Copilot — GitHub REST API</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0F1419; --bg-raised:#161C24; --border:#262E3A; --text:#E7E9EC; --text-dim:#8A94A3; --accent:#6E7BFF; --cite:#F2A93B; --cite-dim:#F2A93B22; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; }
+  .wrap { max-width:720px; margin:0 auto; padding:64px 24px 120px; }
+  .label { font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text-dim); margin-bottom:12px; }
+  h1 { font-size:28px; font-weight:600; max-width:480px; }
+  .sub { color:var(--text-dim); font-size:15px; max-width:460px; }
+  form { display:flex; gap:8px; background:var(--bg-raised); border:1px solid var(--border); border-radius:10px; padding:6px; }
+  form:focus-within { border-color:var(--accent); }
+  .prompt-char { font-family:'JetBrains Mono',monospace; color:var(--accent); display:flex; align-items:center; padding-left:10px; }
+  input[type=text] { flex:1; background:transparent; border:none; outline:none; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:14.5px; padding:12px 4px; }
+  button { background:var(--accent); color:#0F1419; border:none; border-radius:6px; padding:0 18px; font-weight:600; cursor:pointer; }
+  .examples { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+  .example { font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--text-dim); border:1px solid var(--border); border-radius:999px; padding:6px 12px; cursor:pointer; }
+  .example:hover { border-color:var(--accent); color:var(--text); }
+  #result { margin-top:40px; }
+  .answer-text { font-size:15.5px; line-height:1.75; white-space:pre-wrap; }
+  .cite { display:inline-flex; align-items:center; gap:4px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--cite); background:var(--cite-dim); border:1px solid #F2A93B44; border-radius:999px; padding:2px 9px; margin:0 2px; text-decoration:none; }
+  .status { font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text-dim); }
+  .error { color:#E37878; font-family:'JetBrains Mono',monospace; font-size:13.5px; }
+  footer { margin-top:64px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-dim); border-top:1px solid var(--border); padding-top:20px; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="label">github rest api / grounded copilot</div>
+    <h1>Ask anything about the GitHub REST API.</h1>
+    <p class="sub">Every answer is retrieved and cited back to the real source — nothing here comes from memory.</p>
+
+    <form id="queryForm">
+      <span class="prompt-char">&gt;</span>
+      <input type="text" id="question" placeholder="e.g. what does a 404 mean when getting an issue?" autocomplete="off">
+      <button type="submit" id="askBtn">Ask</button>
+    </form>
+
+    <div class="examples">
+      <div class="example" data-q="What parameters does the list issues endpoint accept?">list issues params</div>
+      <div class="example" data-q="What does a 404 mean when getting an issue?">404 on get issue</div>
+      <div class="example" data-q="How do I list pull requests for a repo?">list pull requests</div>
+    </div>
+
+    <div id="result"></div>
+    <footer>DevOps/API RAG Copilot — retrieval-augmented, citation-enforced</footer>
+  </div>
+
+<script>
+  const form = document.getElementById('queryForm');
+  const input = document.getElementById('question');
+  const result = document.getElementById('result');
+  const btn = document.getElementById('askBtn');
+
+  document.querySelectorAll('.example').forEach(el => {
+    el.addEventListener('click', () => {
+      input.value = el.dataset.q;
+      form.dispatchEvent(new Event('submit'));
+    });
+  });
+
+  function linkifyCitations(text) {
+    const urlRegex = /(https?:\/\/docs\.github\.com[^\s\)\]]+)/g;
+    return text.replace(urlRegex, (url) => `<a class="cite" href="${url}" target="_blank">source</a>`);
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const question = input.value.trim();
+    if (!question) return;
+    btn.disabled = true;
+    result.innerHTML = `<div class="status">retrieving and generating...</div>`;
+    try {
+      const res = await fetch('/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question })
+      });
+      const data = await res.json();
+      const html = linkifyCitations(escapeHtml(data.answer || 'No answer returned.'));
+      result.innerHTML = `<div class="answer-text">${html}</div>`;
+    } catch (err) {
+      result.innerHTML = `<div class="error">Request failed: ${err.message}</div>`;
+    } finally {
+      btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
