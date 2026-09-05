@@ -2,6 +2,7 @@ import os
 import chromadb
 from sentence_transformers import SentenceTransformer
 from groq import Groq
+import sys
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -10,14 +11,12 @@ collection = client.get_collection(name='github_api_docs')
 model = SentenceTransformer('BAAI/bge-small-en-v1.5')
 groq_client = Groq(api_key=os.environ.get('GROQ_API_KEY'))
 
+sys.path.append(os.path.join(os.path.dirname(__file__)))
+from reranker import rerank_search
+
 def retrieve(query, k=5):
-    query_embedding = model.encode([query]).tolist()
-    results = collection.query(query_embeddings=query_embedding, n_results=k)
-    return list(zip(
-        results['documents'][0],
-        results['metadatas'][0],
-        results['distances'][0]
-    ))
+    results = rerank_search(query, final_k=k)
+    return [(chunk['text'], {'source_url': chunk['source_url']}, score) for chunk, score in results]
 
 def build_prompt(query, chunks):
     context = ""

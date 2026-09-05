@@ -6,6 +6,11 @@ chunks = json.load(open('data/processed/chunks.json'))
 embeddings = np.load('data/processed/chunk_embeddings.npy')
 
 client = chromadb.PersistentClient(path='data/processed/chroma_db')
+try:
+    client.delete_collection(name='github_api_docs')
+except Exception:
+    pass
+
 collection = client.create_collection(name='github_api_docs')
 
 collection.add(

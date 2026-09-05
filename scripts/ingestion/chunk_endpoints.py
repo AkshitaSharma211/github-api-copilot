@@ -54,7 +54,10 @@ chunk_id = 0
 for record in records:
     text = format_record(record)
     pieces = split_text(text)
-    for piece in pieces:
+    header = f"Endpoint: {record['method'].upper()} {record['path']}\nSummary: {record['summary']}\n"
+    for i, piece in enumerate(pieces):
+        if i > 0:
+            piece = header + "...\n" + piece
         all_chunks.append({
             'chunk_id': chunk_id,
             'path': record['path'],
