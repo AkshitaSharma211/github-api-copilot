@@ -1,7 +1,16 @@
+# NOTE: This reranker causes a reproducible bus error / segfault on this
+# machine (Apple Silicon, Python 3.12) — root cause not resolved (tested
+# across sentence-transformers CrossEncoder, raw transformers, CPU-forced,
+# and various env var fixes; crash is content-independent and consistent).
+# generate.py currently uses hybrid_search directly instead. Kept here as
+# a documented, working design — revisit if run on different hardware.
+
 from sentence_transformers import CrossEncoder
 from hybrid_search import hybrid_search, bm25_rank, vector_rank, reciprocal_rank_fusion, chunks
+import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2', device='cpu')
 
 def rerank_search(query, candidate_k=20, final_k=5):
     # get a wider hybrid candidate pool first
@@ -13,7 +22,7 @@ def rerank_search(query, candidate_k=20, final_k=5):
 
     # score each (query, chunk) pair with the cross-encoder
     pairs = [[query, c['text']] for c in candidates]
-    scores = reranker.predict(pairs)
+    scores = reranker.predict(pairs, batch_size=1)
 
     # sort candidates by cross-encoder score, take final_k
     ranked = sorted(zip(candidates, scores), key=lambda x: x[1], reverse=True)

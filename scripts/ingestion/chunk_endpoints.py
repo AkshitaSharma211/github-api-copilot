@@ -20,8 +20,8 @@ def format_record(record):
     return text
 
 
+
 def split_text(text, max_chars=2000, overlap_chars=300):
-    """Split long text into overlapping pieces, breaking at sentence/line boundaries."""
     if len(text) <= max_chars:
         return [text]
 
@@ -30,7 +30,6 @@ def split_text(text, max_chars=2000, overlap_chars=300):
     while start < len(text):
         end = start + max_chars
         if end < len(text):
-            # try to break at the last newline before the hard cutoff
             break_point = text.rfind('\n', start, end)
             if break_point == -1 or break_point <= start:
                 break_point = end
@@ -38,9 +37,15 @@ def split_text(text, max_chars=2000, overlap_chars=300):
             break_point = len(text)
 
         chunks.append(text[start:break_point])
-        start = break_point - overlap_chars
-        if start < 0:
-            start = 0
+
+        next_start = break_point - overlap_chars
+        if next_start < 0:
+            next_start = 0
+        # snap forward to the next space/newline so we never start mid-word
+        while next_start < len(text) and text[next_start] not in (' ', '\n'):
+            next_start += 1
+
+        start = next_start
         if break_point == len(text):
             break
 
