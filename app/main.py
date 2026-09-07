@@ -13,7 +13,7 @@ class Query(BaseModel):
 
 @app.post("/query")
 def query(q: Query):
-    return {"answer": answer(q.question)}
+    return answer(q.question)
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 

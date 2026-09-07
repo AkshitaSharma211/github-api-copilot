@@ -86,8 +86,16 @@
         body: JSON.stringify({ question })
       });
       const data = await res.json();
-      const html = linkifyCitations(escapeHtml(data.answer || 'No answer returned.'));
-      result.innerHTML = `<div class="answer-text">${html}</div>`;
+console.log('DEBUG data:', data, typeof data.answer);
+const answerText = escapeHtml(data.answer || 'No answer returned.');
+const sources = data.source_url || [];
+
+let sourcesHtml = '';
+if (sources.length > 0) {
+  sourcesHtml = sources.map(url => `<a class="cite" href="${url}" target="_blank">source</a>`).join(' ');
+}
+
+result.innerHTML = `<div class="answer-text">${answerText}</div><div style="margin-top:12px">${sourcesHtml}</div>`;
     } catch (err) {
       result.innerHTML = `<div class="error">Request failed: ${err.message}</div>`;
     } finally {

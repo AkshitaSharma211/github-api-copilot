@@ -13,6 +13,8 @@ Use exactly this shape:
 }}
 Include every source URL (copied exactly from the context above, character-for-character) that a claim in your answer actually depends on. Do not include a URL that isn't in the context. If your answer relies on only one source, source_url should still be a list with one item in it.
 
+- If the question asks about parameters or multiple items, briefly describe what each item does in a few words, not just list the names — e.g. "state (open/closed), labels (filter by tag)" rather than just "state, labels."
+
 Context:
 {context}
 
