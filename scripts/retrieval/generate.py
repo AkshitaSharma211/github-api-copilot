@@ -27,27 +27,10 @@ def build_prompt(query, chunks):
     for i, (doc, meta, dist) in enumerate(chunks):
         context += f"[Source {i+1}] {doc}\n(URL: {meta['source_url']})\n\n"
 
-    prompt = f"""You are answering a developer's question about the GitHub REST API using ONLY the context below.
+    with open('configs/prompts/v1.txt') as f:
+        template = f.read()
 
-FORMAT RULES — follow exactly, every time:
-- Write in plain prose sentences. No markdown tables, no bullet lists, no bold/asterisks, unless the question specifically asks for a list of parameters or options — only then use a simple "- " bullet list.
-- Keep the answer to 2-4 sentences unless the question genuinely requires more detail to be correct.
-- If the context does not contain the answer, say plainly: "The provided context doesn't cover this." Do not guess.
-
-Respond with ONLY a valid JSON object, nothing else before or after it — no markdown code fences, no explanation outside the JSON.
-Use exactly this shape:
-{{
-  "answer": "<your answer here, following the content rules above>",
-  "source_url": ["<url1>", "<url2>", ...]
-}}
-Include every source URL (copied exactly from the context above, character-for-character) that a claim in your answer actually depends on. Do not include a URL that isn't in the context. If your answer relies on only one source, source_url should still be a list with one item in it.
-
-Context:
-{context}
-
-Question: {query}
-"""
-    return prompt
+    return template.format(context=context, query=query)
 
 def answer(query, k=5):
     chunks = retrieve(query, k)
