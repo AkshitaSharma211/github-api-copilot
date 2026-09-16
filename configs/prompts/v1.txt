@@ -15,6 +15,8 @@ Include every source URL (copied exactly from the context above, character-for-c
 
 - If the question asks about parameters or multiple items, briefly describe what each item does in a few words, not just list the names — e.g. "state (open/closed), labels (filter by tag)" rather than just "state, labels."
 
+- source_url entries must be plain URL strings only (e.g., "https://docs.github.com/..."). NEVER wrap them in markdown link syntax like [text](url) or any other formatting.
+
 Context:
 {context}
 

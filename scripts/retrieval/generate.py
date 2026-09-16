@@ -16,7 +16,6 @@ model = SentenceTransformer('BAAI/bge-small-en-v1.5')
 groq_client = Groq(api_key=os.environ.get('GROQ_API_KEY'))
 
 sys.path.append(os.path.join(os.path.dirname(__file__)))
-from reranker import rerank_search
 
 def retrieve(query, k=5):
     results = hybrid_search(query, top_k=k)
