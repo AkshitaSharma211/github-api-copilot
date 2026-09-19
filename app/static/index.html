@@ -6,7 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#0F1419; --bg-raised:#161C24; --border:#262E3A; --text:#E7E9EC; --text-dim:#8A94A3; --accent:#6E7BFF; --cite:#F2A93B; --cite-dim:#F2A93B22; }
+  :root { --bg:#0F1419; --bg-raised:#161C24; --border:#262E3A; --text:#E7E9EC; --text-dim:#8A94A3; --accent:#6E7BFF; --cite:#F2A93B; --cite-dim:#F2A93B22; --warn:#E3A838; --warn-dim:#E3A83822; }
   * { box-sizing: border-box; }
   body { margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; }
   .wrap { max-width:720px; margin:0 auto; padding:64px 24px 120px; }
@@ -17,13 +17,16 @@
   form:focus-within { border-color:var(--accent); }
   .prompt-char { font-family:'JetBrains Mono',monospace; color:var(--accent); display:flex; align-items:center; padding-left:10px; }
   input[type=text] { flex:1; background:transparent; border:none; outline:none; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:14.5px; padding:12px 4px; }
+  input[type=text]:disabled { opacity:0.5; }
   button { background:var(--accent); color:#0F1419; border:none; border-radius:6px; padding:0 18px; font-weight:600; cursor:pointer; }
+  button:disabled { opacity:0.5; cursor:not-allowed; }
   .examples { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
   .example { font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--text-dim); border:1px solid var(--border); border-radius:999px; padding:6px 12px; cursor:pointer; }
   .example:hover { border-color:var(--accent); color:var(--text); }
   #result { margin-top:40px; }
   .answer-text { font-size:15.5px; line-height:1.75; white-space:pre-wrap; }
-  .cite { display:inline-flex; align-items:center; gap:4px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--cite); background:var(--cite-dim); border:1px solid #F2A93B44; border-radius:999px; padding:2px 9px; margin:0 2px; text-decoration:none; }
+  .cite { display:inline-flex; align-items:center; gap:4px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--cite); background:var(--cite-dim); border:1px solid #F2A93B44; border-radius:999px; padding:2px 9px; margin:2px 4px 2px 0; text-decoration:none; }
+  .warning { display:flex; align-items:flex-start; gap:8px; margin-top:16px; padding:10px 14px; background:var(--warn-dim); border:1px solid #E3A83844; border-radius:8px; font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--warn); }
   .status { font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text-dim); }
   .error { color:#E37878; font-family:'JetBrains Mono',monospace; font-size:13.5px; }
   footer { margin-top:64px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-dim); border-top:1px solid var(--border); padding-top:20px; }
@@ -33,18 +36,18 @@
   <div class="wrap">
     <div class="label">github rest api / grounded copilot</div>
     <h1>Ask anything about the GitHub REST API.</h1>
-    <p class="sub">Every answer is retrieved and cited back to the real source — nothing here comes from memory.</p>
+    <p class="sub">Every answer is retrieved and cited back to the real source — nothing here comes from memory. Best for specific endpoints, parameters, and status codes.</p>
 
     <form id="queryForm">
       <span class="prompt-char">&gt;</span>
-      <input type="text" id="question" placeholder="e.g. what does a 404 mean when getting an issue?" autocomplete="off">
+      <input type="text" id="question" placeholder="e.g. what does a 404 mean when getting an issue?" autocomplete="off" maxlength="500">
       <button type="submit" id="askBtn">Ask</button>
     </form>
 
     <div class="examples">
-      <div class="example" data-q="What parameters does the list issues endpoint accept?">list issues params</div>
       <div class="example" data-q="What does a 404 mean when getting an issue?">404 on get issue</div>
-      <div class="example" data-q="How do I list pull requests for a repo?">list pull requests</div>
+      <div class="example" data-q="What parameters does the list issues endpoint accept?">list issues params</div>
+      <div class="example" data-q="How do I trigger a GitHub Actions workflow run via the REST API?">trigger a workflow run</div>
     </div>
 
     <div id="result"></div>
@@ -64,11 +67,6 @@
     });
   });
 
-  function linkifyCitations(text) {
-    const urlRegex = /(https?:\/\/docs\.github\.com[^\s\)\]]+)/g;
-    return text.replace(urlRegex, (url) => `<a class="cite" href="${url}" target="_blank">source</a>`);
-  }
-
   function escapeHtml(str) {
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
@@ -77,29 +75,62 @@
     e.preventDefault();
     const question = input.value.trim();
     if (!question) return;
+
     btn.disabled = true;
+    input.disabled = true;
     result.innerHTML = `<div class="status">retrieving and generating...</div>`;
+
     try {
       const res = await fetch('/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question })
       });
+
       const data = await res.json();
-console.log('DEBUG data:', data, typeof data.answer);
-const answerText = escapeHtml(data.answer || 'No answer returned.');
-const sources = data.source_url || [];
 
-let sourcesHtml = '';
-if (sources.length > 0) {
-  sourcesHtml = sources.map(url => `<a class="cite" href="${url}" target="_blank">source</a>`).join(' ');
-}
+      // Backend errors (validation, rate limit, server error) come back as {"detail": "..."}
+      if (!res.ok) {
+        let msg = 'Something went wrong. Please try again.';
+        if (res.status === 429) {
+          msg = "You're asking a bit fast — please wait a moment and try again.";
+        } else if (res.status === 422) {
+          msg = Array.isArray(data.detail)
+            ? data.detail.map(d => d.msg).join(' ')
+            : (data.detail || 'Please enter a valid question (3–500 characters).');
+        } else if (data.detail) {
+          msg = data.detail;
+        }
+        result.innerHTML = `<div class="error">${escapeHtml(msg)}</div>`;
+        return;
+      }
 
-result.innerHTML = `<div class="answer-text">${answerText}</div><div style="margin-top:12px">${sourcesHtml}</div>`;
+      const answerText = escapeHtml(data.answer || 'No answer returned.');
+      const sources = data.source_url || [];
+      const hallucinated = data.hallucinated_citations || [];
+
+      let sourcesHtml = '';
+      if (sources.length > 0) {
+        sourcesHtml = sources.map(url =>
+          `<a class="cite" href="${escapeHtml(url)}" target="_blank">source</a>`
+        ).join(' ');
+      }
+
+      let warningHtml = '';
+      if (hallucinated.length > 0) {
+        warningHtml = `<div class="warning">⚠️ This answer referenced a source that wasn't found in the retrieved documents. Treat with extra caution.</div>`;
+      }
+
+      result.innerHTML = `
+        <div class="answer-text">${answerText}</div>
+        <div style="margin-top:12px">${sourcesHtml}</div>
+        ${warningHtml}
+      `;
     } catch (err) {
-      result.innerHTML = `<div class="error">Request failed: ${err.message}</div>`;
+      result.innerHTML = `<div class="error">Request failed: ${escapeHtml(err.message)}</div>`;
     } finally {
       btn.disabled = false;
+      input.disabled = false;
     }
   });
 </script>
