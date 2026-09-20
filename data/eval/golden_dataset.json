@@ -48,12 +48,6 @@
     "category": "negative"
   },
   {
-    "question": "How do I trigger a GitHub Actions workflow run via the REST API?",
-    "gold_answer": "NOT_COVERED",
-    "source_url": "",
-    "category": "negative"
-  },
-  {
     "question": "When calling the organization issues endpoint, what does the `org` path parameter represent, and is it case sensitive?",
     "gold_answer": "The organization name. The name is not case sensitive.",
     "source_url": "https://docs.github.com/rest/issues/issues#list-organization-issues-assigned-to-the-authenticated-user",
@@ -216,12 +210,6 @@
     "category": "negative"
   },
   {
-    "question": "What are the exact steps and API parameters required to transfer a repository ownership to a new organization?",
-    "gold_answer": "NOT_COVERED",
-    "source_url": "",
-    "category": "negative"
-  },
-  {
     "question": "How do I set up continuous deployment billing alerts and credit card payment methods via the REST API?",
     "gold_answer": "NOT_COVERED",
     "source_url": "",
@@ -301,12 +289,6 @@
   },
   {
     "question": "How do I configure webhook secret signatures and payload delivery retry policies for pull request events?",
-    "gold_answer": "NOT_COVERED",
-    "source_url": "",
-    "category": "negative"
-  },
-  {
-    "question": "What are the exact steps and API parameters required to transfer repository ownership to a new organization?",
     "gold_answer": "NOT_COVERED",
     "source_url": "",
     "category": "negative"
@@ -670,12 +652,6 @@
     "gold_answer": "This endpoint does not accept authentication and will only include publicly visible users.",
     "source_url": "https://docs.github.com/rest/search/search#search-users",
     "category": "lookup"
-  },
-  {
-    "question": "How do I search for issues assigned to me using the API?",
-    "gold_answer": "NOT_COVERED",
-    "source_url": "",
-    "category": "negative"
   },
   {
     "question": "Can I search for pull requests by author name?",

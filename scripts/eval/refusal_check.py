@@ -21,7 +21,7 @@ correct_refusals = 0
 for item in negatives:
     result = safe_rag_answer(item['question'])
     time.sleep(2)
-    if "doesn't cover" in result['answer'].lower():
+    if "isn't covered" in result['answer'].lower():
         correct_refusals += 1
     else:
         print(f"MISSED REFUSAL: {item['question']}")
