@@ -96,3 +96,9 @@ watchfiles==1.2.0
 websocket-client==1.9.2
 websockets==17.1
 yarl==1.24.5
+groq==0.37.1
+fastapi==0.141.1
+rank-bm25==0.2.2
+sentence-transformers==6.0.1
+slowapi==0.1.10
+uvicorn==0.52.4
